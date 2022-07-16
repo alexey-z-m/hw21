@@ -3,17 +3,7 @@ import Foundation
 extension ViewController {
     
     @objc func bf(){
-        let passwordToUnlock: String = self.textField.text ?? ""
-        bruteForceIsRunning = true
-        let bruteForceDWI = DispatchWorkItem {
-            self.bruteForce(passwordToUnlock: passwordToUnlock)
-        }
-        let quere = DispatchQueue(label: "bf",qos: .default)
-        quere.async(execute: bruteForceDWI)
-    }
-    
-    @objc func stopBruteForce(){
-        bruteForceIsRunning = false
+        bruteForceIsRunning.toggle()
     }
     
     func bruteForce(passwordToUnlock: String) {
@@ -22,10 +12,10 @@ extension ViewController {
         DispatchQueue.main.async {
             self.buttonGenerate.isEnabled = false
             self.activityIndicator.startAnimating()
-            self.bruteForceIsRunning = true
         }
         while password != passwordToUnlock {
             if !self.bruteForceIsRunning {
+                self.bruteForceIsRunning = false
                 break
             }
             password = generateBruteForce(password, fromArray: ALLOWED_CHARACTERS)
@@ -36,6 +26,7 @@ extension ViewController {
         }
         DispatchQueue.main.async {
             self.buttonGenerate.isEnabled = true
+            self.bruteForceIsRunning = false
             self.activityIndicator.stopAnimating()
             if password == passwordToUnlock {
                 self.label.text = "Взломаный пароль: " + password

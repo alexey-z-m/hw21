@@ -2,9 +2,37 @@ import UIKit
 import SnapKit
 
 class ViewController: UIViewController {
-
-    var bruteForceIsRunning = false
     
+    var isBlack: Bool = false {
+        didSet {
+            if isBlack {
+                self.view.backgroundColor = .black
+                self.label.textColor = .white
+                buttonToggleBackground.backgroundColor = .white
+                buttonToggleBackground.setTitleColor(.black, for: .normal)
+            } else {
+                self.view.backgroundColor = .white
+                self.label.textColor = .black
+                buttonToggleBackground.backgroundColor = .black
+                buttonToggleBackground.setTitleColor(.white, for: .normal)
+            }
+        }
+    }
+
+    var bruteForceIsRunning: Bool = false {
+        didSet {
+            if bruteForceIsRunning {
+                let passwordToUnlock: String = self.textField.text ?? ""
+                bruteForceDWI = DispatchWorkItem {
+                    
+                    self.bruteForce(passwordToUnlock: passwordToUnlock)
+                }
+                let quere = DispatchQueue(label: "bf",qos: .default)
+                quere.async(execute: bruteForceDWI!)
+            }
+        }
+    }
+    var bruteForceDWI: DispatchWorkItem?
     let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
@@ -26,12 +54,6 @@ class ViewController: UIViewController {
         return textField
     }()
     
-    let textViewConsole: UITextView = {
-        let textView = UITextView()
-        textView.keyboardDismissMode = .none
-        return textView
-    }()
-    
     let buttonEye: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "eye.fill"), for: .normal)
@@ -43,7 +65,6 @@ class ViewController: UIViewController {
        let label = UILabel()
         label.text = "Введите пароль:"
         label.textAlignment = .center
-        label.textColor = .black
         return label
     }()
     
@@ -51,7 +72,7 @@ class ViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle("Generate", for: .normal)
         button.setTitleColor(.black, for: .normal)
-        button.backgroundColor = .blue
+        button.backgroundColor = .link
         button.addTarget(self, action: #selector(generate), for: .touchUpInside)
         return button
     }()
@@ -60,19 +81,23 @@ class ViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle("BruteForce", for: .normal)
         button.setTitleColor(.black, for: .normal)
-        button.backgroundColor = .red
+        button.backgroundColor = .green
         button.addTarget(self, action: #selector(bf), for: .touchUpInside)
         return button
     }()
     
-    let buttonStop: UIButton = {
+    let buttonToggleBackground: UIButton = {
         let button = UIButton()
-        button.setTitle("Stop BruteForce", for: .normal)
-        button.setTitleColor(.black, for: .normal)
-        button.backgroundColor = .red
-        button.addTarget(self, action: #selector(stopBruteForce), for: .touchUpInside)
+        button.setTitle("Toggle background", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = .black
+        button.addTarget(self, action: #selector(toggleBackground), for: .touchUpInside)
         return button
     }()
+    
+    @objc func toggleBackground(){
+        isBlack.toggle()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -88,8 +113,7 @@ class ViewController: UIViewController {
         stackView.addArrangedSubview(buttonGenerate)
         stackView.addArrangedSubview(buttonBruteForce)
         stackView.addArrangedSubview(activityIndicator)
-        stackView.addArrangedSubview(buttonStop)
-        view.addSubview(textViewConsole)
+        stackView.addArrangedSubview(buttonToggleBackground)
     }
     
     func setupLayout() {
@@ -113,13 +137,9 @@ class ViewController: UIViewController {
             make.left.equalToSuperview().offset(100)
             make.right.equalToSuperview().offset(-100)
         }
-        buttonStop.snp.makeConstraints { make in
+        buttonToggleBackground.snp.makeConstraints { make in
             make.left.equalToSuperview().offset(100)
             make.right.equalToSuperview().offset(-100)
-        }
-        textViewConsole.snp.makeConstraints { make in
-            make.top.equalTo(stackView.snp.bottom)
-            make.left.bottom.right.equalToSuperview()
         }
     }
     
