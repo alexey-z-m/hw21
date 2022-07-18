@@ -3,6 +3,7 @@ import SnapKit
 
 class ViewController: UIViewController {
     
+    var bruteForceDWI: DispatchWorkItem?
     var isBlack: Bool = false {
         didSet {
             if isBlack {
@@ -27,12 +28,13 @@ class ViewController: UIViewController {
                     
                     self.bruteForce(passwordToUnlock: passwordToUnlock)
                 }
-                let quere = DispatchQueue(label: "bf",qos: .default)
-                quere.async(execute: bruteForceDWI!)
+                let queue = DispatchQueue(label: "bruteforce",qos: .default)
+                guard let bruteForceDWI = bruteForceDWI else {return}
+                queue.async(execute: bruteForceDWI)
             }
         }
     }
-    var bruteForceDWI: DispatchWorkItem?
+    
     let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical

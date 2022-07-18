@@ -7,23 +7,27 @@ extension ViewController {
     }
     
     func bruteForce(passwordToUnlock: String) {
-        let ALLOWED_CHARACTERS:   [String] = String().printable.map { String($0) }
+        let allowedCharacters: [String] = String().printable.map { String($0) }
         var password: String = ""
+        
         DispatchQueue.main.async {
             self.buttonGenerate.isEnabled = false
             self.activityIndicator.startAnimating()
         }
+        
         while password != passwordToUnlock {
             if !self.bruteForceIsRunning {
                 self.bruteForceIsRunning = false
                 break
             }
-            password = generateBruteForce(password, fromArray: ALLOWED_CHARACTERS)
+            let generator = PassworgGenerator()
+            password = generator.generateBruteForce(password, fromArray: allowedCharacters)
             print(password)
             DispatchQueue.main.async {
                 self.label.text = "Идет подбор: " + password
             }
         }
+        
         DispatchQueue.main.async {
             self.buttonGenerate.isEnabled = true
             self.bruteForceIsRunning = false
@@ -39,22 +43,7 @@ extension ViewController {
     }
 }
 
-extension String {
-    var digits:      String { return "0123456789" }
-    var lowercase:   String { return "abcdefghijklmnopqrstuvwxyz" }
-    var uppercase:   String { return "ABCDEFGHIJKLMNOPQRSTUVWXYZ" }
-    var punctuation: String { return "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~" }
-    var letters:     String { return lowercase + uppercase }
-    var printable:   String { return digits + letters + punctuation }
-
-    mutating func replace(at index: Int, with character: Character) {
-        var stringArray = Array(self)
-        stringArray[index] = character
-        self = String(stringArray)
-    }
-}
-
-extension ViewController {
+class PassworgGenerator {
     func indexOf(character: Character, _ array: [String]) -> Int {
         return array.firstIndex(of: String(character))!
     }
@@ -71,9 +60,9 @@ extension ViewController {
         }
         else {
             str.replace(at: str.count - 1,
-                        with: characterAt(index: (indexOf(character: str.last!, array) + 1) % array.count, array))
-            if indexOf(character: str.last!, array) == 0 {
-                str = String(generateBruteForce(String(str.dropLast()), fromArray: array)) + String(str.last!)
+                        with: characterAt(index: (indexOf(character: str.last ?? Character(""), array) + 1) % array.count, array))
+            if indexOf(character: str.last ?? Character(""), array) == 0 {
+                str = String(generateBruteForce(String(str.dropLast()), fromArray: array)) + String(str.last ?? Character(""))
             }
         }
         return str
