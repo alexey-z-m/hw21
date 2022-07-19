@@ -65,7 +65,7 @@ class ViewController: UIViewController {
     
     let buttonBruteForce: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("BruteForce", for: .normal)
+        button.setTitle("Start bruteforce", for: .normal)
         button.setTitleColor(.black, for: .normal)
         button.backgroundColor = .green
         button.addTarget(self, action: #selector(bf), for: .touchUpInside)
@@ -150,17 +150,13 @@ class ViewController: UIViewController {
     
     @objc func bf(){
         if(bruteForceDWI?.isCancelled != false) {
+            buttonBruteForce.setTitle("Stop bruteForce", for: .normal)
+            buttonBruteForce.backgroundColor = .red
             let passwordToUnlock: String = textField.text ?? ""
             bruteForceDWI = DispatchWorkItem {
-                
                 self.bruteForce(passwordToUnlock: passwordToUnlock)
             }
             let queue = DispatchQueue(label: "bruteforce",qos: .default)
-            if bruteForceDWI == nil {
-                print(123)
-            } else {
-                print("wererw")
-            }
             guard let bruteForceDWI = bruteForceDWI else {return}
             queue.async(execute: bruteForceDWI)
         } else {
@@ -199,6 +195,8 @@ class ViewController: UIViewController {
             }
             self.textField.isSecureTextEntry = false
             self.changeIconEye()
+            self.buttonBruteForce.setTitle("Start bruteforce", for: .normal)
+            self.buttonBruteForce.backgroundColor = .green
         }
     }
 }
