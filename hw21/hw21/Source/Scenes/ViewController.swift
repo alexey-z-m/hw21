@@ -2,8 +2,6 @@ import UIKit
 import SnapKit
 
 class ViewController: UIViewController {
-    
-    var bruteForceDWI: DispatchWorkItem?
     var isBlack: Bool = false {
         didSet {
             if isBlack {
@@ -19,22 +17,8 @@ class ViewController: UIViewController {
             }
         }
     }
-
-    var bruteForceIsRunning: Bool = false {
-        didSet {
-            if bruteForceIsRunning {
-                let passwordToUnlock: String = self.textField.text ?? ""
-                bruteForceDWI = DispatchWorkItem {
-                    
-                    self.bruteForce(passwordToUnlock: passwordToUnlock)
-                }
-                let queue = DispatchQueue(label: "bruteforce",qos: .default)
-                guard let bruteForceDWI = bruteForceDWI else {return}
-                queue.async(execute: bruteForceDWI)
-            }
-        }
-    }
     
+    var bruteForceDWI: DispatchWorkItem?
     let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
@@ -44,7 +28,7 @@ class ViewController: UIViewController {
     }()
     
     let activityIndicator: UIActivityIndicatorView = {
-       let aIndicator = UIActivityIndicatorView()
+        let aIndicator = UIActivityIndicatorView()
         return aIndicator
     }()
     
@@ -64,7 +48,7 @@ class ViewController: UIViewController {
     }()
     
     let label: UILabel = {
-       let label = UILabel()
+        let label = UILabel()
         label.text = "Введите пароль:"
         label.textAlignment = .center
         return label
@@ -162,6 +146,60 @@ class ViewController: UIViewController {
     @objc func generate() {
         let symbols = String().printable
         textField.text = String((0..<3).map{ _ in symbols.randomElement()! })
+    }
+    
+    @objc func bf(){
+        if(bruteForceDWI?.isCancelled != false) {
+            let passwordToUnlock: String = textField.text ?? ""
+            bruteForceDWI = DispatchWorkItem {
+                
+                self.bruteForce(passwordToUnlock: passwordToUnlock)
+            }
+            let queue = DispatchQueue(label: "bruteforce",qos: .default)
+            if bruteForceDWI == nil {
+                print(123)
+            } else {
+                print("wererw")
+            }
+            guard let bruteForceDWI = bruteForceDWI else {return}
+            queue.async(execute: bruteForceDWI)
+        } else {
+            bruteForceDWI?.cancel()
+        }
+    }
+    
+    func bruteForce(passwordToUnlock: String) {
+        let allowedCharacters: [String] = String().printable.map { String($0) }
+        var password: String = ""
+        
+        DispatchQueue.main.async {
+            self.buttonGenerate.isEnabled = false
+            self.activityIndicator.startAnimating()
+        }
+        
+        while password != passwordToUnlock {
+            guard let item = bruteForceDWI, !item.isCancelled else {
+                break
+            }
+            password = BruteForce().generateBruteForce(password, fromArray: allowedCharacters)
+            print(password)
+            DispatchQueue.main.async {
+                self.label.text = "Идет подбор: " + password
+            }
+        }
+        
+        DispatchQueue.main.async {
+            self.buttonGenerate.isEnabled = true
+            self.activityIndicator.stopAnimating()
+            self.bruteForceDWI?.cancel()
+            if password == passwordToUnlock {
+                self.label.text = "Взломаный пароль: " + password
+            } else {
+                self.label.text = "Пароль не взломан."
+            }
+            self.textField.isSecureTextEntry = false
+            self.changeIconEye()
+        }
     }
 }
 
